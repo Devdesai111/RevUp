@@ -20,7 +20,8 @@ export function AuthProvider({ children }) {
     const res  = await apiLogin(email, password);
     const data = res.data.data;
 
-    if (!data.user || data.user.role !== 'admin') {
+    // Backend uses isAdmin: Boolean (not a role field)
+    if (!data.user || !data.user.isAdmin) {
       throw new Error('Access denied. Admin account required.');
     }
 
