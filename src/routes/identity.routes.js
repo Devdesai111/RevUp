@@ -4,7 +4,7 @@ const router = require('express').Router();
 const ctrl = require('../controllers/identity.controller');
 const { requireAuth } = require('../middlewares/auth.mid');
 const { requireRole } = require('../middlewares/role.mid');
-const { validate } = require('../middlewares/validate.mid');
+const validate = require('../middlewares/validate.mid');
 const {
   currentIdentitySchema,
   futureIdentitySchema,

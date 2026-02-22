@@ -5,25 +5,16 @@ const app = require('../../app');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 let authToken;
-let userId;
 
-const register = () =>
-  request(app).post('/api/v1/auth/register').send({
-    email:    'identity-test@example.com',
-    password: 'Password123!',
-  });
+const EMAIL    = 'identity-test@example.com';
+const PASSWORD = 'Password123!';
 
-const login = () =>
-  request(app).post('/api/v1/auth/login').send({
-    email:    'identity-test@example.com',
-    password: 'Password123!',
-  });
-
-beforeAll(async () => {
-  await register();
-  const res = await login();
+// afterEach in db.helper.js wipes ALL collections after every test.
+// Re-register + login before each test so authToken stays valid.
+beforeEach(async () => {
+  await request(app).post('/api/v1/auth/register').send({ email: EMAIL, password: PASSWORD });
+  const res = await request(app).post('/api/v1/auth/login').send({ email: EMAIL, password: PASSWORD });
   authToken = res.body.data.accessToken;
-  userId    = res.body.data.user._id;
 });
 
 describe('GET /api/v1/identity/me', () => {

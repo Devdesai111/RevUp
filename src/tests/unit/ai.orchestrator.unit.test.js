@@ -2,8 +2,6 @@
 
 jest.mock('openai');
 
-const { Errors } = require('../../utils/AppError');
-
 describe('ai.orchestrator', () => {
   let callLLM;
   let OpenAI;

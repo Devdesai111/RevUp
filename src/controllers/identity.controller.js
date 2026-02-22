@@ -4,7 +4,7 @@ const IdentityProfile = require('../models/IdentityProfile');
 const { calcRiskProfile } = require('../services/identity/risk.service');
 const { synthesizeIdentity } = require('../services/identity/synthesis.service');
 const redis = require('../config/redis');
-const { REDIS_KEYS } = require('../config/redis-keys');
+const REDIS_KEYS = require('../config/redis-keys');
 const { sendSuccess } = require('../utils/response.util');
 const { Errors } = require('../utils/AppError');
 

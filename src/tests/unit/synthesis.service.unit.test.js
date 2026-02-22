@@ -62,7 +62,6 @@ describe('synthesis.service', () => {
   it('should throw aiUnavailable when AI response fails Zod validation', async () => {
     callLLM.mockResolvedValue({ wrong: 'shape' });
 
-    const { Errors } = require('../../utils/AppError');
     await expect(synthesizeIdentity(MOCK_PROFILE)).rejects.toMatchObject({ code: 'AI_UNAVAILABLE' });
   });
 });
