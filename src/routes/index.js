@@ -8,7 +8,7 @@ router.use('/auth', require('./auth.routes'));
 
 // ─── Future routes (Tasks 25, 31, 37, 41, 46, 61…76) ─────────────────────────
 router.use('/identity',   require('./identity.routes'));
-// router.use('/plan',       require('./plan.routes'));
+router.use('/plan',       require('./plan.routes'));
 // router.use('/log',        require('./log.routes'));
 // router.use('/alignment',  require('./alignment.routes'));
 // router.use('/reflection', require('./reflection.routes'));
