@@ -23,12 +23,15 @@ if (env.NODE_ENV === 'test') {
     scheduleEveningReminders: () => Promise.resolve(),
   };
 } else {
-  const { Queue }        = require('bullmq');
+  const { Queue } = require('bullmq');
   const { QUEUES, JOBS } = require('../config/constants');
-  const redis            = require('../config/redis');
+
+  // BullMQ requires a dedicated ioredis connection WITHOUT keyPrefix.
+  // bull-redis.js provides that — see src/config/bull-redis.js for details.
+  const bullRedis = require('../config/bull-redis');
 
   // ─── Queue instances ────────────────────────────────────────────────────────
-  const alignmentQueue  = new Queue(QUEUES.ALIGNMENT,  { connection: redis });
+  const alignmentQueue  = new Queue(QUEUES.ALIGNMENT,  { connection: bullRedis });
   const reflectionQueue = new Queue(QUEUES.REFLECTION, { connection: bullRedis });
   const reviewQueue     = new Queue(QUEUES.REVIEW,     { connection: bullRedis });
   const sweepQueue      = new Queue(QUEUES.SWEEP,      { connection: bullRedis });

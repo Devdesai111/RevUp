@@ -32,11 +32,11 @@ const createAlignmentWorker = () => {
   /* istanbul ignore next */
   const { Worker } = require('bullmq');
   /* istanbul ignore next */
-  const redis      = require('../../config/redis');
+  const bullRedis  = require('../../config/bull-redis');
 
   /* istanbul ignore next */
   const worker = new Worker(QUEUES.ALIGNMENT, processor, {
-    connection:  redis,
+    connection:  bullRedis,
     concurrency: 5,
   });
 

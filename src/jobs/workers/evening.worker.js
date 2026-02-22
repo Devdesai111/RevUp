@@ -48,11 +48,11 @@ const createEveningWorker = () => {
   /* istanbul ignore next */
   const { Worker } = require('bullmq');
   /* istanbul ignore next */
-  const redisConn  = require('../../config/redis');
+  const bullRedis  = require('../../config/bull-redis');
 
   /* istanbul ignore next */
   const worker = new Worker(QUEUES.EVENING, processor, {
-    connection:  redisConn,
+    connection:  bullRedis,
     concurrency: 1,
   });
 
