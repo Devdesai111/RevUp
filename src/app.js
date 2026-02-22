@@ -4,9 +4,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
-const env = require('./config/env');
-const { sendSuccess } = require('./utils/response.util');
-const errorMiddleware = require('./middlewares/error.mid');
+const env    = require('./config/env');
+const logger = require('./utils/logger');
+const { sendSuccess }    = require('./utils/response.util');
+const errorMiddleware    = require('./middlewares/error.mid');
 const { globalRateLimit } = require('./middlewares/rateLimit.mid');
 
 const app = express();
@@ -59,8 +60,58 @@ app.get('/api/v1/health', async (_req, res) => {
   });
 });
 
+// ─── Swagger UI (non-production only) ────────────────────────────────────────
+if (env.NODE_ENV !== 'production') {
+  try {
+    const swaggerUi  = require('swagger-ui-express');
+    const yaml       = require('js-yaml');
+    const fs         = require('fs');
+    const path       = require('path');
+    const swaggerDoc = yaml.load(
+      fs.readFileSync(path.join(__dirname, 'docs/swagger.yaml'), 'utf8'),
+    );
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
+  } catch (e) {
+    // swagger-ui-express optional — don't crash in CI if not installed
+  }
+}
+
 // ─── API routes ───────────────────────────────────────────────────────────────
 app.use('/api/v1', require('./routes'));
+
+// ─── Bull Board queue monitoring (non-test + non-prod, or BULL_BOARD_ENABLED) ─
+if (env.NODE_ENV !== 'test' && (env.NODE_ENV !== 'production' || env.BULL_BOARD_ENABLED)) {
+  try {
+    const { createBullBoard } = require('@bull-board/api');
+    const { BullMQAdapter }   = require('@bull-board/api/bullMQAdapter');
+    const { ExpressAdapter }  = require('@bull-board/express');
+    const {
+      alignmentQueue, reflectionQueue,
+      reviewQueue, sweepQueue,
+      morningQueue, eveningQueue,
+    } = require('./jobs/queues');
+
+    const serverAdapter = new ExpressAdapter();
+    serverAdapter.setBasePath('/admin/queues');
+
+    createBullBoard({
+      queues: [
+        new BullMQAdapter(alignmentQueue),
+        new BullMQAdapter(reflectionQueue),
+        new BullMQAdapter(reviewQueue),
+        new BullMQAdapter(sweepQueue),
+        new BullMQAdapter(morningQueue),
+        new BullMQAdapter(eveningQueue),
+      ],
+      serverAdapter,
+    });
+
+    app.use('/admin/queues', serverAdapter.getRouter());
+    logger.info('Bull Board mounted at /admin/queues');
+  } catch (e) {
+    logger.warn({ err: e.message }, 'Bull Board failed to mount — skipping');
+  }
+}
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

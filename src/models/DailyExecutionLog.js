@@ -3,13 +3,13 @@
 const mongoose = require('mongoose');
 
 const completedTaskSchema = new mongoose.Schema({
-  taskId:      { type: mongoose.Schema.Types.ObjectId },
+  taskId:      { type: String },
   taskName:    { type: String, required: true },
   weight:      { type: Number, default: 1 },
   isCore:      { type: Boolean, default: false },
   isHabit:     { type: Boolean, default: false },
   completed:   { type: Boolean, default: false },
-  effortScore: { type: Number, min: 1, max: 10, default: 5 },
+  effortScore: { type: Number, min: 0, max: 10, default: 0 },
   completedAt: { type: Date, default: null },
 }, { _id: true });
 

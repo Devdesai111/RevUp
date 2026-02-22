@@ -21,12 +21,28 @@ const createMemoryClient = () => {
     status: 'ready',
     // get / set / del — core commands used by auth and reset services
     get: (key) => Promise.resolve(store.get(key) ?? null),
-    set: (key, value, exFlag, ttl) => {
-      store.set(key, value);
-      if (exFlag === 'EX' && ttl) {
-        clearTimeout(timers.get(key));
-        timers.set(key, setTimeout(() => store.delete(key), ttl * 1000).unref());
+    set: (key, value, ...restArgs) => {
+      // Parse variadic flags: EX <seconds>, NX, PX <ms>, etc.
+      const upper = restArgs.map((a) => (typeof a === 'string' ? a.toUpperCase() : a));
+      const hasNX = upper.includes('NX');
+
+      // NX: only set if key does NOT already exist
+      if (hasNX && store.has(key)) {
+        return Promise.resolve(null);
       }
+
+      store.set(key, value);
+
+      // Handle EX (seconds TTL)
+      const exIdx = upper.indexOf('EX');
+      if (exIdx !== -1) {
+        const ttl = upper[exIdx + 1];
+        if (ttl) {
+          clearTimeout(timers.get(key));
+          timers.set(key, setTimeout(() => store.delete(key), ttl * 1000).unref());
+        }
+      }
+
       return Promise.resolve('OK');
     },
     del,

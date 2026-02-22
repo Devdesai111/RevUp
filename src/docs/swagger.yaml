@@ -1,0 +1,614 @@
+openapi: "3.0.3"
+info:
+  title: RevUp Identity Alignment API
+  version: "1.0.0"
+  description: Backend API for the RevUp Identity Alignment System
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data:    { type: object }
+
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        message: { type: string }
+        code:    { type: string }
+        errors:  { type: array, items: { type: object } }
+
+    User:
+      type: object
+      properties:
+        _id:              { type: string }
+        email:            { type: string, format: email }
+        subscriptionTier: { type: string, enum: [free, premium] }
+        timezone:         { type: string }
+        createdAt:        { type: string, format: date-time }
+
+    Tokens:
+      type: object
+      properties:
+        accessToken:  { type: string }
+        refreshToken: { type: string }
+
+    AlignmentDashboard:
+      type: object
+      properties:
+        currentScore:    { type: number, minimum: 0, maximum: 100 }
+        driftIndex:      { type: number, minimum: -1, maximum: 1 }
+        streakCount:     { type: number }
+        stateLevel:      { type: number, enum: [1, 2, 3] }
+        sevenDayAverage: { type: number }
+        patternFlags:    { type: array, items: { type: string } }
+
+security:
+  - BearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      security: []
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  mongo:  { type: string, example: connected }
+                  redis:  { type: string, example: connected }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Register with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:    { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          user:         { $ref: "#/components/schemas/User" }
+                          accessToken:  { type: string }
+                          refreshToken: { type: string }
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:    { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/User" }
+        "401":
+          description: Unauthorized
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        "200":
+          description: New tokens issued
+        "401":
+          description: Invalid or expired refresh token
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and invalidate refresh token
+      responses:
+        "200":
+          description: Logged out
+
+  /identity/current:
+    post:
+      tags: [Identity]
+      summary: Submit current identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role, energyLevel, executionGap, executionGapSeverity, strengths, weaknesses, frustrationPoint]
+              properties:
+                role:                 { type: string }
+                energyLevel:          { type: number, minimum: 1, maximum: 10 }
+                executionGap:         { type: string }
+                executionGapSeverity: { type: number, minimum: 1, maximum: 5 }
+                strengths:            { type: array, items: { type: string } }
+                weaknesses:           { type: array, items: { type: string } }
+                frustrationPoint:     { type: string }
+      responses:
+        "200":
+          description: Current identity saved
+
+  /identity/future:
+    post:
+      tags: [Identity]
+      summary: Submit future identity vision
+      responses:
+        "200":
+          description: Future identity saved
+
+  /identity/constraints:
+    post:
+      tags: [Identity]
+      summary: Submit time and life constraints
+      responses:
+        "200":
+          description: Constraints saved
+
+  /identity/risk:
+    post:
+      tags: [Identity]
+      summary: Submit risk assessment answers
+      responses:
+        "200":
+          description: Risk profile computed
+
+  /identity/pillars:
+    post:
+      tags: [Identity]
+      summary: Select priority pillars
+      responses:
+        "200":
+          description: Pillars saved
+
+  /identity/synthesize:
+    post:
+      tags: [Identity]
+      summary: Run AI synthesis (blocking, premium only)
+      responses:
+        "200":
+          description: Identity blueprint generated
+        "403":
+          description: Premium required
+
+  /identity/profile:
+    get:
+      tags: [Identity]
+      summary: Get full identity profile
+      responses:
+        "200":
+          description: Identity profile
+
+  /plan/generate:
+    post:
+      tags: [Plan]
+      summary: Generate 90-day plan from identity profile
+      responses:
+        "202":
+          description: Plan generation started
+
+  /plan/current:
+    get:
+      tags: [Plan]
+      summary: Get current active plan
+      responses:
+        "200":
+          description: Current plan
+
+  /execute/intent:
+    post:
+      tags: [Execution]
+      summary: Declare daily intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date]
+              properties:
+                date:    { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+                message: { type: string }
+      responses:
+        "200":
+          description: Intent declared
+
+  /execute/log:
+    post:
+      tags: [Execution]
+      summary: Log daily task completions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, tasks, habitDone]
+              properties:
+                date:            { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+                habitDone:       { type: boolean }
+                deepWorkMinutes: { type: number, minimum: 0, maximum: 720 }
+                tasks:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      taskId:      { type: string }
+                      taskName:    { type: string }
+                      weight:      { type: number }
+                      isCore:      { type: boolean }
+                      completed:   { type: boolean }
+                      effortScore: { type: number, minimum: 1, maximum: 10 }
+      responses:
+        "202":
+          description: Log saved, alignment recalc enqueued
+    patch:
+      tags: [Execution]
+      summary: Edit existing daily log
+      responses:
+        "202":
+          description: Log updated
+
+  /execute/timer:
+    post:
+      tags: [Execution]
+      summary: Sync deep work timer
+      responses:
+        "200":
+          description: Timer synced
+
+  /execute/commit-voice:
+    post:
+      tags: [Execution]
+      summary: Submit voice log (premium only)
+      responses:
+        "202":
+          description: Voice log processing started
+        "403":
+          description: Premium required
+
+  /execute/today:
+    get:
+      tags: [Execution]
+      summary: Get today's execution log
+      responses:
+        "200":
+          description: Today's log
+
+  /alignment/dashboard:
+    get:
+      tags: [Alignment]
+      summary: Get current alignment dashboard data
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - properties:
+                      data: { $ref: "#/components/schemas/AlignmentDashboard" }
+
+  /alignment/trend:
+    get:
+      tags: [Alignment]
+      summary: Get 30-day alignment score trend
+      responses:
+        "200":
+          description: Array of daily metrics
+
+  /alignment/patterns:
+    get:
+      tags: [Alignment]
+      summary: Get current behavioral pattern flags
+      responses:
+        "200":
+          description: Pattern flags with descriptions
+
+  /reflect/evening:
+    post:
+      tags: [Reflection]
+      summary: Submit evening reflection (async AI processing)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, text]
+              properties:
+                date: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+                text: { type: string, minLength: 10, maxLength: 5000 }
+                tags:
+                  type: array
+                  maxItems: 3
+                  items:
+                    type: string
+                    enum: [win, failure, insight, focus, energy, gratitude]
+      responses:
+        "202":
+          description: Reflection accepted - AI processing in background
+
+  /reflect/history:
+    get:
+      tags: [Reflection]
+      summary: Get paginated journal history
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: tags
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paginated journal entries
+
+  /reflect/search:
+    get:
+      tags: [Reflection]
+      summary: Full-text search journal entries
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 2 }
+      responses:
+        "200":
+          description: Search results
+
+  /reflect/export/pdf:
+    get:
+      tags: [Reflection]
+      summary: Export monthly PDF report (Premium)
+      parameters:
+        - name: year
+          in: query
+          schema: { type: integer }
+        - name: month
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: PDF file stream
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "403":
+          description: Premium required
+
+  /avatar/state:
+    get:
+      tags: [Avatar]
+      summary: Get current avatar state and visual config
+      responses:
+        "200":
+          description: Avatar state
+
+  /analytics/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Get analytics dashboard data
+      responses:
+        "200":
+          description: Analytics data
+
+  /analytics/trend:
+    get:
+      tags: [Analytics]
+      summary: Get 30-day score trend
+      responses:
+        "200":
+          description: Trend data
+
+  /analytics/heatmap:
+    get:
+      tags: [Analytics]
+      summary: Get execution heatmap by day of week
+      responses:
+        "200":
+          description: Heatmap data
+
+  /analytics/drift:
+    get:
+      tags: [Analytics]
+      summary: Get 30-day drift chart
+      responses:
+        "200":
+          description: Drift data
+
+  /voice/commit:
+    post:
+      tags: [Voice]
+      summary: Submit voice memo for transcription
+      responses:
+        "202":
+          description: Voice processing started
+
+  /settings/notifications:
+    patch:
+      tags: [Settings]
+      summary: Update notification preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                morning: { type: boolean }
+                evening: { type: boolean }
+                drift:   { type: boolean }
+                streak:  { type: boolean }
+      responses:
+        "200":
+          description: Preferences updated
+
+  /settings/fcm-token:
+    patch:
+      tags: [Settings]
+      summary: Update Firebase push notification token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Token updated
+
+  /settings/subscription:
+    get:
+      tags: [Settings]
+      summary: Get subscription status
+      responses:
+        "200":
+          description: Subscription info
+
+  /webhooks/stripe:
+    post:
+      tags: [Webhooks]
+      security: []
+      summary: Stripe billing webhook
+      responses:
+        "200":
+          description: Event processed
+        "400":
+          description: Invalid signature
+
+  /webhooks/razorpay:
+    post:
+      tags: [Webhooks]
+      security: []
+      summary: Razorpay billing webhook
+      responses:
+        "200":
+          description: Event processed
+        "400":
+          description: Invalid signature
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List all users (admin only)
+      parameters:
+        - name: tier
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Paginated user list
+        "403":
+          description: Admin required
+
+  /admin/metrics:
+    get:
+      tags: [Admin]
+      summary: Platform-wide usage stats (admin only)
+      responses:
+        "200":
+          description: Platform metrics
+        "403":
+          description: Admin required
+
+  /admin/calibrate/{userId}:
+    post:
+      tags: [Admin]
+      summary: Force alignment recalculation for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Recalculation queued
+        "403":
+          description: Admin required
