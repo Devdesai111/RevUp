@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.test
+coverage
+.git
+*.log
+docker-compose*.yml
+.github
+src/tests
