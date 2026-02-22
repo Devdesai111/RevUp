@@ -1,0 +1,913 @@
+{
+  "info": {
+    "name": "RevUp Backend API",
+    "_postman_id": "revup-backend-v1",
+    "description": "Complete RevUp Backend API Collection — 45 endpoints across 12 feature groups.\n\n**Setup:**\n1. Set `base_url` variable to `http://localhost:3000/api/v1`\n2. Call `POST /auth/register` or `POST /auth/login` — tokens are auto-saved\n3. All protected routes automatically use `{{access_token}}`\n\n**Variables auto-captured:** `access_token`, `refresh_token`, `user_id`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",      "value": "http://localhost:3000/api/v1", "type": "string" },
+    { "key": "access_token",  "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "user_id",       "value": "", "type": "string" },
+    { "key": "target_user_id","value": "", "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🏥 Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token',  b.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', b.data.refreshToken);",
+                  "  pm.collectionVariables.set('user_id',       b.data.user._id);",
+                  "  pm.test('Register successful', () => pm.expect(b.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@revup.app\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth","register"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token',  b.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', b.data.refreshToken);",
+                  "  pm.collectionVariables.set('user_id',       b.data.user._id);",
+                  "  pm.test('Login successful', () => pm.expect(b.success).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@revup.app\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth","login"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth","me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timezone\": \"Asia/Kolkata\",\n  \"notificationPreferences\": {\n    \"morning\": true,\n    \"evening\": true,\n    \"drift\": true,\n    \"streak\": true\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth","me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const b = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token',  b.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', b.data.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/refresh", "host": ["{{base_url}}"], "path": ["auth","refresh"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@revup.app\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/forgot", "host": ["{{base_url}}"], "path": ["auth","forgot"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@revup.app\",\n  \"token\": \"PASTE_RESET_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/reset", "host": ["{{base_url}}"], "path": ["auth","reset"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Google OAuth",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"GOOGLE_ID_TOKEN_HERE\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/google", "host": ["{{base_url}}"], "path": ["auth","google"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Apple OAuth",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"APPLE_ID_TOKEN_HERE\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/apple", "host": ["{{base_url}}"], "path": ["auth","apple"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth","logout"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout All Devices",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/auth/logout-all", "host": ["{{base_url}}"], "path": ["auth","logout-all"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/auth/account", "host": ["{{base_url}}"], "path": ["auth","account"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🧬 Identity (Onboarding)",
+      "description": "Complete onboarding in this order: current → future → constraints → risk → pillars → synthesize",
+      "item": [
+        {
+          "name": "Get My Identity",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/identity/me", "host": ["{{base_url}}"], "path": ["identity","me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Onboarding Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/identity/status", "host": ["{{base_url}}"], "path": ["identity","status"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Step 1 — Save Current Identity",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Software Engineer\",\n  \"energyLevel\": 6,\n  \"executionGap\": \"focus\",\n  \"executionGapSeverity\": 3,\n  \"strengths\": [\"coding\", \"problem-solving\", \"communication\"],\n  \"weaknesses\": [\"consistency\", \"procrastination\"],\n  \"frustrationPoint\": \"I start things but rarely finish them\",\n  \"disciplineBreakPattern\": \"I get distracted by new ideas\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/identity/current", "host": ["{{base_url}}"], "path": ["identity","current"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Step 2 — Save Future Identity",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"desiredRole\": \"Senior Engineering Manager\",\n  \"incomeRange\": \"200k-250k\",\n  \"skillGoals\": [\"leadership\", \"system design\", \"product thinking\"],\n  \"healthTarget\": \"Run 5km under 30 minutes\",\n  \"lifestyleVision\": \"Location independent, work 6 hours a day\",\n  \"declarationSentence\": \"I am becoming a disciplined leader who ships quality products.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/identity/future", "host": ["{{base_url}}"], "path": ["identity","future"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Step 3 — Save Time Constraints",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"availableHoursPerDay\": 3,\n  \"workHoursStart\": \"09:00\",\n  \"workHoursEnd\": \"18:00\",\n  \"sleepHours\": 7,\n  \"focusWindowStart\": \"06:00\",\n  \"focusWindowEnd\": \"08:00\",\n  \"fixedCommitments\": [\"school pickup 15:00\", \"gym 19:00\"]\n}"
+            },
+            "url": { "raw": "{{base_url}}/identity/constraints", "host": ["{{base_url}}"], "path": ["identity","constraints"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Step 4 — Risk Assessment (6 answers, 1-5 scale)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": [3, 4, 2, 5, 3, 4]\n}"
+            },
+            "url": { "raw": "{{base_url}}/identity/risk", "host": ["{{base_url}}"], "path": ["identity","risk"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Step 5 — Save Priority Pillars",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pillars\": [\"career\", \"health\", \"finances\"]\n}"
+            },
+            "url": { "raw": "{{base_url}}/identity/pillars", "host": ["{{base_url}}"], "path": ["identity","pillars"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Step 6 — AI Synthesize Identity (blocking ~5s)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/identity/synthesize", "host": ["{{base_url}}"], "path": ["identity","synthesize"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Save Avatar Base",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"genderPresentation\": \"neutral\",\n  \"skinTone\": \"medium\",\n  \"clothingStyle\": \"casual\",\n  \"environmentTheme\": \"urban\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/identity/avatar-base", "host": ["{{base_url}}"], "path": ["identity","avatar-base"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Declaration Sentence",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"declaration\": \"I am a disciplined executor who ships quality work every single day.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/identity/declaration", "host": ["{{base_url}}"], "path": ["identity","declaration"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Identity (Premium Only)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/identity/reset", "host": ["{{base_url}}"], "path": ["identity","reset"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "📅 Plan",
+      "description": "Generate plans in order: quarter → month → sprint. Then use daily execution endpoints.",
+      "item": [
+        {
+          "name": "Generate Quarter Plan (AI ~10s)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/plan/quarter", "host": ["{{base_url}}"], "path": ["plan","quarter"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Month Plan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/plan/month", "host": ["{{base_url}}"], "path": ["plan","month"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Sprint (2 weeks)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/plan/sprint", "host": ["{{base_url}}"], "path": ["plan","sprint"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Active Plan",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/plan/current", "host": ["{{base_url}}"], "path": ["plan","current"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Today's Tasks",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/plan/today", "host": ["{{base_url}}"], "path": ["plan","today"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/plan/history?page=1&limit=10",
+              "host": ["{{base_url}}"], "path": ["plan","history"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/plan/stats", "host": ["{{base_url}}"], "path": ["plan","stats"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Sprint Task Names",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tasks\": [\n    { \"taskId\": \"task-001\", \"taskName\": \"Complete API documentation\" },\n    { \"taskId\": \"task-002\", \"taskName\": \"Write unit tests for auth module\" }\n  ]\n}"
+            },
+            "url": { "raw": "{{base_url}}/plan/sprint", "host": ["{{base_url}}"], "path": ["plan","sprint"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reroll Sprint Tasks",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/plan/sprint/reroll", "host": ["{{base_url}}"], "path": ["plan","sprint","reroll"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Extra (Non-Scoring) Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskName\": \"Reply to client emails\",\n  \"estimatedMins\": 30\n}"
+            },
+            "url": { "raw": "{{base_url}}/plan/sprint/extra", "host": ["{{base_url}}"], "path": ["plan","sprint","extra"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Extra Task",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/plan/sprint/extra/TASK_ID_HERE",
+              "host": ["{{base_url}}"], "path": ["plan","sprint","extra","TASK_ID_HERE"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "✅ Execution",
+      "item": [
+        {
+          "name": "Declare Intent for Today",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-02-22\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/execute/intent", "host": ["{{base_url}}"], "path": ["execute","intent"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Log Task Completions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-02-22\",\n  \"tasks\": [\n    {\n      \"taskId\": \"task-001\",\n      \"taskName\": \"Complete project setup\",\n      \"isCore\": true,\n      \"completed\": true,\n      \"effortScore\": 8\n    },\n    {\n      \"taskId\": \"task-002\",\n      \"taskName\": \"Write unit tests\",\n      \"isCore\": true,\n      \"completed\": false,\n      \"effortScore\": 0\n    }\n  ],\n  \"habitDone\": true,\n  \"deepWorkMinutes\": 90\n}"
+            },
+            "url": { "raw": "{{base_url}}/execute/log", "host": ["{{base_url}}"], "path": ["execute","log"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Task Log",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-02-22\",\n  \"tasks\": [\n    {\n      \"taskId\": \"task-002\",\n      \"taskName\": \"Write unit tests\",\n      \"isCore\": true,\n      \"completed\": true,\n      \"effortScore\": 7\n    }\n  ],\n  \"habitDone\": true,\n  \"deepWorkMinutes\": 120\n}"
+            },
+            "url": { "raw": "{{base_url}}/execute/log", "host": ["{{base_url}}"], "path": ["execute","log"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Sync Deep Work Timer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minutes\": 25\n}"
+            },
+            "url": { "raw": "{{base_url}}/execute/timer", "host": ["{{base_url}}"], "path": ["execute","timer"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Today's Execution Log",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/execute/today", "host": ["{{base_url}}"], "path": ["execute","today"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Voice Commit (Premium) — audio/webm",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audio",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload a .webm, .mp4, .wav, .mp3, or .ogg audio file (max 25MB)"
+                }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/execute/commit-voice", "host": ["{{base_url}}"], "path": ["execute","commit-voice"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "📊 Alignment",
+      "item": [
+        {
+          "name": "Get Alignment Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/alignment/dashboard", "host": ["{{base_url}}"], "path": ["alignment","dashboard"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get 7-Day Trend",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/alignment/trend", "host": ["{{base_url}}"], "path": ["alignment","trend"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Detected Patterns",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/alignment/patterns", "host": ["{{base_url}}"], "path": ["alignment","patterns"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🧙 Avatar",
+      "item": [
+        {
+          "name": "Get Avatar State",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/avatar/state", "host": ["{{base_url}}"], "path": ["avatar","state"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "📝 Reflection",
+      "item": [
+        {
+          "name": "Post Evening Reflection",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-02-22\",\n  \"text\": \"Today was productive. I completed the project setup and pushed 3 features to staging. I felt focused for most of the day except around 3pm where I got distracted by Slack notifications. Tomorrow I need to tackle the test suite which I have been avoiding.\",\n  \"mode\": \"text\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/reflect/evening", "host": ["{{base_url}}"], "path": ["reflect","evening"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reflection History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/reflect/history?page=1&limit=10",
+              "host": ["{{base_url}}"], "path": ["reflect","history"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Reflections",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/reflect/search?q=distracted&page=1&limit=10",
+              "host": ["{{base_url}}"], "path": ["reflect","search"],
+              "query": [
+                { "key": "q",     "value": "distracted" },
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Export PDF Report (Premium)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/reflect/export/pdf?year=2026&month=2",
+              "host": ["{{base_url}}"], "path": ["reflect","export","pdf"],
+              "query": [
+                { "key": "year",  "value": "2026" },
+                { "key": "month", "value": "2" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "📈 Analytics",
+      "item": [
+        {
+          "name": "Get Analytics Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/analytics/dashboard", "host": ["{{base_url}}"], "path": ["analytics","dashboard"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🎤 Voice",
+      "item": [
+        {
+          "name": "Transcribe Audio (Premium)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audio",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload .webm, .mp4, .wav, .mp3 or .ogg file (max 25MB)"
+                }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/voice/transcribe", "host": ["{{base_url}}"], "path": ["voice","transcribe"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "⚙️ Settings",
+      "item": [
+        {
+          "name": "Update Notification Preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"morning\": true,\n  \"evening\": true,\n  \"drift\": true,\n  \"streak\": false\n}"
+            },
+            "url": { "raw": "{{base_url}}/settings/notifications", "host": ["{{base_url}}"], "path": ["settings","notifications"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update FCM Token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-device-token-from-firebase-sdk-here\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/settings/fcm-token", "host": ["{{base_url}}"], "path": ["settings","fcm-token"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subscription Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/settings/subscription", "host": ["{{base_url}}"], "path": ["settings","subscription"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🔔 Webhooks",
+      "description": "These routes receive raw body buffers. In production, headers carry real signatures.",
+      "item": [
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",      "value": "application/json" },
+              { "key": "stripe-signature",   "value": "t=timestamp,v1=signature" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"checkout.session.completed\",\n  \"data\": {\n    \"object\": {\n      \"customer\": \"cus_testcustomer123\"\n    }\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/webhooks/stripe", "host": ["{{base_url}}"], "path": ["webhooks","stripe"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Razorpay Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",          "value": "application/json" },
+              { "key": "x-razorpay-signature",   "value": "hmac_sha256_signature_here" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"subscription.activated\",\n  \"payload\": {\n    \"subscription\": {\n      \"entity\": {\n        \"notes\": {\n          \"email\": \"testuser@revup.app\"\n        }\n      }\n    }\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/webhooks/razorpay", "host": ["{{base_url}}"], "path": ["webhooks","razorpay"] }
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin",
+      "description": "Requires isAdmin: true on the user account.",
+      "item": [
+        {
+          "name": "Calibrate User Alignment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/calibrate/{{target_user_id}}",
+              "host": ["{{base_url}}"], "path": ["admin","calibrate","{{target_user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/users?page=1&limit=20&tier=free",
+              "host": ["{{base_url}}"], "path": ["admin","users"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "tier",  "value": "free", "description": "Optional: free | premium" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Platform Metrics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": { "raw": "{{base_url}}/admin/metrics", "host": ["{{base_url}}"], "path": ["admin","metrics"] }
+          },
+          "response": []
+        }
+      ]
+    }
+
+  ]
+}
